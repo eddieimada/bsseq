@@ -13,16 +13,18 @@ getStats <- function(bstat, regions = NULL, ...) {
     data.frame(areaStat = vapply(stat_by_region, sum, numeric(1), 
                                  na.rm = na.rm, USE.NAMES = FALSE), 
                maxStat = vapply(stat_by_region, function(x){
-                   x[which.max(x)]}, numeric(1), na.rm = na.rm, 
+                   x[which.max(x)]}, numeric(1), 
                    USE.NAMES = FALSE),
                min.p.val = vapply(stat_by_region, function(x){
                    pvals <- pt(abs(x), df, lower.tail = F) * 2
                    min(p.adjust(pvals, method = "BH"))
-               }),
+               },  numeric(1), 
+               USE.NAMES = FALSE),
                p.val95q = vapply(stat_by_region, function(x){
                    pvals <- pt(abs(x), df, lower.tail = F) * 2
                    quantile(p.adjust(pvals, method = "BH"), 0.95)
-               }))
+               }, numeric(1), 
+               USE.NAMES = FALSE))
     
 }
 
