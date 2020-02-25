@@ -6,13 +6,24 @@ getStats <- function(bstat, regions = NULL, ...) {
 }
 
 # NOTE: Realises in memory a matrix with nrow = length(hits) and ncol = 1
-.getRegionStats <- function(stat, hits, na.rm = FALSE) {
-    stat_by_region <- split(as.array(stat[queryHits(hits), ]),
+.getRegionStats <- function (stat, hits, df, na.rm = FALSE) 
+{
+    stat_by_region <- split(as.array(stat[queryHits(hits), ]), 
                             subjectHits(hits))
-    data.frame(areaStat = vapply(stat_by_region, sum, numeric(1),
-                                 na.rm = na.rm, USE.NAMES = FALSE),
-               maxStat = vapply(stat_by_region, max, numeric(1),
-                                na.rm = na.rm, USE.NAMES = FALSE))
+    data.frame(areaStat = vapply(stat_by_region, sum, numeric(1), 
+                                 na.rm = na.rm, USE.NAMES = FALSE), 
+               maxStat = vapply(stat_by_region, function(x){
+                   x[which.max(x)]}, numeric(1), na.rm = na.rm, 
+                   USE.NAMES = FALSE),
+               min.p.val = vapply(stat_by_region), function(x){
+                   pvals <- pt(abs(x), df, lower.tail = F) * 2
+                   min(p.adjust(pvals, method = "BH"))
+               },
+               p.val95q = vapply(stat_by_region), function(x){
+                   pvals <- pt(abs(x), df, lower.tail = F) * 2
+                   quantile(p.adjust(pvals, method = "BH"), 0.95)
+               })
+    
 }
 
 getStats_BSseqStat <- function(BSseqStat, regions = NULL, what = NULL) {
@@ -57,21 +68,24 @@ getStats_BSseqStat <- function(BSseqStat, regions = NULL, what = NULL) {
                tstat.sd = tstat.sd)
 }
 
-getStats_BSseqTstat <- function(BSseqTstat, regions = NULL, stat = "tstat.corrected") {
+getStats_BSseqTstat <- function (BSseqTstat, regions = NULL, stat = "tstat.corrected") 
+{
     stopifnot(is(BSseqTstat, "BSseqTstat"))
-    if(is.null(regions))
+    if (is.null(regions)) 
         return(BSseqTstat@stats)
-    if(class(regions) == "data.frame")
+    if (class(regions) == "data.frame") 
         regions <- data.frame2GRanges(regions)
     stopifnot(stat %in% colnames(BSseqTstat@stats))
     stopifnot(length(stat) == 1)
     stopifnot(is(regions, "GenomicRanges"))
+    df <- length(c(BSseqTstat@parameters$group1, 
+                   BSseqTstat@parameters$group2))-2
     hits <- findOverlaps(BSseqTstat, regions)
-    out <- .getRegionStats(stat = BSseqTstat@stats[, stat, drop = FALSE],
-                           hits = hits)
-    if(! stat %in% c("tstat.corrected", "tstat"))
+    out <- .getRegionStats(stat = BSseqTstat@stats[, stat, drop = FALSE], 
+                           hits = hits, df=df)
+    if (!stat %in% c("tstat.corrected", "tstat")) 
         return(out)
-    stats_ttest <- .getRegionStats_ttest(stats = BSseqTstat@stats,
+    stats_ttest <- .getRegionStats_ttest(stats = BSseqTstat@stats, 
                                          hits = hits)
     out <- cbind(out, stats_ttest)
     out
