@@ -124,9 +124,8 @@ BSmooth.tstat <- function(BSseq, group1, group2, estimate.var = c("same", "paire
     if(local.correct) {
         stats <- cbind(rawSds, tstat.sd, group2.means, group1.means,
                        tstat, tstat.corrected)
-        colnames(stats) <- c("rawSds", "tstat.sd",
-                             "group2.means", "group1.means", "tstat",
-                             "tstat.corrected")
+        colnames(stats) <- c("rawSds", "tstat.sd", "group2.means", 
+                             "group1.means", "tstat", "tstat.corrected", "min.p.val", "p.val95q")
 
     } else {
         stats <- cbind(rawSds, tstat.sd, group2.means, group1.means,
