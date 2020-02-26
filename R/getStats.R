@@ -13,7 +13,7 @@ getStats <- function(bstat, regions = NULL, ...) {
     data.frame(areaStat = vapply(stat_by_region, sum, numeric(1), 
                                  na.rm = na.rm, USE.NAMES = FALSE), 
                maxStat = vapply(stat_by_region, function(x){
-                   x[which.max(x)]}, numeric(1), 
+                   x[which.max(abs(x))]}, numeric(1), 
                    USE.NAMES = FALSE),
                min.p.val = vapply(stat_by_region, function(x){
                    pvals <- pt(abs(x), df, lower.tail = F) * 2
